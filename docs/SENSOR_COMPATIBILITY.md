@@ -93,12 +93,12 @@ an EVO device:
 - `saegw-upad_*` — mobile gateway (JunOS only)
 - `packet_capture` — JunOS only
 
-These cause no errors — dispatch entries exist but the router simply never
+These cause no errors — dispatch entries exist but the device simply never
 sends packets with those extension numbers.
 
 ---
 
-## Verifying sensor names from your router
+## Verifying sensor names from your device
 
 Enable `Debug On` in the `[INPUT]` block and watch the journal:
 
