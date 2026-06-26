@@ -1,0 +1,16 @@
+[Unit]
+Description=Fluent Bit - JTI Native UDP Telemetry (JunOS)
+Documentation=https://docs.fluentbit.io
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/sysconfig/fluent-bit
+EnvironmentFile=-/etc/default/fluent-bit
+ExecStart=/opt/fluent-bit/bin/fluent-bit -c /etc/fluent-bit/fluent-bit.conf
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
