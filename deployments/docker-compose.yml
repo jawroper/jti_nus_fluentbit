@@ -1,0 +1,19 @@
+services:
+  jti_nus:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    image: jti_nus_fluentbit:latest
+    container_name: jti_nus
+    # host networking is strongly preferred for UDP telemetry —
+    # avoids kernel buffer drops under high packet rates.
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      # Mount your own fluent-bit.conf to customise outputs without rebuilding
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      # Persist file output logs
+      - jti_logs:/var/log/jti_nus
+
+volumes:
+  jti_logs:

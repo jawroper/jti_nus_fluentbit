@@ -33,6 +33,8 @@ jti_nus_fluentbit/
 │   └── jti_dispatch.h      ← dispatch table header
 │
 ├── deployments/
+│   ├── Dockerfile          ← two-stage build: compile plugin + minimal runtime image
+│   ├── docker-compose.yml  ← compose file for container deployment
 │   ├── fluent-bit.conf     ← example Fluent Bit configuration
 │   └── plugins.conf        ← example tells Fluent Bit where to load the .so
 │
@@ -42,7 +44,8 @@ jti_nus_fluentbit/
 │   └── gen_lookup_update.py   ← compares proto trees across releases (reference)
 │
 ├── docs/
-│   └── SENSOR_COMPATIBILITY.md  ← sensor_name differences between JTI and EVO
+│   ├── DOCKER.md               ← Docker deployment guide (topologies, Dockerfile, Compose)
+│   └── SENSOR_COMPATIBILITY.md ← sensor_name differences between JTI and EVO
 │
 ├── systemd/
 │   └── fluent-bit.service  ← systemd service unit file
@@ -142,7 +145,7 @@ fluent-bit --version
 
 ```bash
 # Debian / Ubuntu
-sudo apt-get install gcc libmsgpack-dev protobuf-c-compiler libprotobuf-c-dev
+sudo apt-get install gcc libmsgpack-dev protobuf-compiler protobuf-c-compiler libprotobuf-c-dev
 
 # RHEL / CentOS / Rocky
 sudo yum install gcc msgpack-devel protobuf-c-devel protobuf-c-compiler
@@ -315,6 +318,25 @@ sudo systemctl restart fluent-bit.service
 
 `make clean` is needed because the dispatch table changed, which means the
 proto compilation step also needs to pick up any new `.proto` files.
+
+---
+
+## Running in Docker
+
+The plugin supports several deployment topologies depending on whether the
+container host receives the UDP telemetry stream directly or whether Fluent Bit
+runs on a separate VM.
+
+See **[docs/DOCKER.md](docs/DOCKER.md)** for the full guide covering:
+
+- Deployment topology selection (container receives UDP vs separate Fluent Bit VM)
+- Dockerfile (three-stage build — the official Fluent Bit image is distroless
+  so the runtime is based on `debian:12-slim` instead)
+- `docker run` options — host networking vs port mapping
+- Runtime config override via volume mounts
+- Docker Compose
+- Viewing container logs
+- Troubleshooting missing libraries
 
 ---
 

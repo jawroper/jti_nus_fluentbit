@@ -7,7 +7,8 @@
 #   make dispatch     — regenerate jti_dispatch.c/.h from proto files
 #
 # Prerequisites:
-#   sudo apt-get install gcc libmsgpack-dev protobuf-c-compiler libprotobuf-c-dev
+#   sudo apt-get install gcc libmsgpack-dev protobuf-compiler \
+#                        protobuf-c-compiler libprotobuf-c-dev
 
 CC          := gcc
 CFLAGS      := -shared -fPIC -O2 \
@@ -22,13 +23,46 @@ BUILD_DIR     := build/proto
 MERGED_DIR    := $(BUILD_DIR)/merged
 SENTINEL      := $(BUILD_DIR)/.compiled
 
+# Locate the google protobuf include directory at parse time.
+# Searches common install locations across Debian/Ubuntu variants.
+# libprotobuf-dev installs to /usr/include/google/protobuf/
+# protobuf-compiler may install to /usr/share/protobuf/
+PROTO_INCLUDE := $(shell find /usr/include /usr/local/include /usr/share/protobuf \
+                     -name "descriptor.proto" 2>/dev/null \
+                     | head -1 \
+                     | xargs -I{} dirname {} \
+                     | xargs -I{} dirname {})
+
 PLUGIN_SRCS := cmd/plugin/jti_nus.c \
                cmd/plugin/jti_walker.c \
                cmd/plugin/jti_dispatch.c
 
-.PHONY: all install clean dispatch
+.PHONY: all install clean dispatch proto-compile
 
-all: $(OUT)
+all: proto-compile $(OUT)
+
+proto-compile: $(SENTINEL)
+
+$(SENTINEL):
+	@mkdir -p $(MERGED_DIR)/google/protobuf
+	@echo "Compiling google proto files (proto include: $(PROTO_INCLUDE))..."
+	protoc-c --c_out=$(MERGED_DIR) --proto_path=$(PROTO_INCLUDE) \
+	    google/protobuf/descriptor.proto \
+	    google/protobuf/any.proto
+	@echo "Compiling JTI proto files..."
+	@cp $(JTI_PROTO_DIR)/telemetry_top.proto $(EVO_PROTO_DIR)/ 2>/dev/null || true
+	@for f in $(JTI_PROTO_DIR)/*.proto; do \
+	    protoc-c --c_out=$(MERGED_DIR) \
+	        --proto_path=$(JTI_PROTO_DIR) "$$f" 2>/dev/null || true; \
+	done
+	@echo "Compiling EVO proto files (overwrites JTI where duplicated)..."
+	@for f in $(EVO_PROTO_DIR)/*.proto; do \
+	    protoc-c --c_out=$(MERGED_DIR) \
+	        --proto_path=$(EVO_PROTO_DIR) "$$f" 2>/dev/null || true; \
+	done
+	@rm -f $(MERGED_DIR)/cosd_oc_evo.pb-c.c $(MERGED_DIR)/cosd_oc_evo.pb-c.h
+	@echo "Proto compilation complete — $$(ls $(MERGED_DIR)/*.pb-c.c 2>/dev/null | wc -l) files"
+	@touch $@
 
 $(OUT): $(PLUGIN_SRCS) $(SENTINEL)
 	@echo "Linking $(OUT)..."
@@ -40,31 +74,6 @@ $(OUT): $(PLUGIN_SRCS) $(SENTINEL)
 	    -I$(MERGED_DIR) -Icmd/plugin \
 	    $(LIBS)
 	@echo "Built $@ ($$(ls -lh $@ | awk '{print $$5}'))"
-
-# Sentinel file: rebuilt whenever proto source files change
-$(SENTINEL): $(wildcard $(JTI_PROTO_DIR)/*.proto) $(wildcard $(EVO_PROTO_DIR)/*.proto)
-	@mkdir -p $(MERGED_DIR)/google/protobuf
-	@echo "Compiling google proto files..."
-	@protoc-c --c_out=$(MERGED_DIR) --proto_path=/usr/include \
-	    google/protobuf/descriptor.proto \
-	    google/protobuf/any.proto 2>/dev/null || true
-	@echo "Compiling JTI proto files..."
-	@cp $(JTI_PROTO_DIR)/telemetry_top.proto $(EVO_PROTO_DIR)/ 2>/dev/null || true
-	@cd $(JTI_PROTO_DIR) && \
-	    for f in *.proto; do \
-	        protoc-c --c_out=$(CURDIR)/$(MERGED_DIR) \
-	            --proto_path=. "$$f" 2>/dev/null || true; \
-	    done
-	@echo "Compiling EVO proto files (overwrites JTI where duplicated)..."
-	@cd $(EVO_PROTO_DIR) && \
-	    for f in *.proto; do \
-	        protoc-c --c_out=$(CURDIR)/$(MERGED_DIR) \
-	            --proto_path=. "$$f" 2>/dev/null || true; \
-	    done
-	@# Remove the one known conflicting file (cosd_oc_evo conflicts with cosd_oc)
-	@rm -f $(MERGED_DIR)/cosd_oc_evo.pb-c.c $(MERGED_DIR)/cosd_oc_evo.pb-c.h
-	@echo "Proto compilation complete — $$(ls $(MERGED_DIR)/*.pb-c.c 2>/dev/null | wc -l) files"
-	@touch $@
 
 dispatch:
 	python3 scripts/gen_dispatch.py \
@@ -83,7 +92,6 @@ clean:
 	rm -f $(OUT)
 	rm -rf build/
 
-# Dynamic target: make update-26.1
 update-%:
 	python3 scripts/gen_dispatch.py \
 	    --jti by_release/jti/$* \
