@@ -108,7 +108,7 @@ sudo journalctl -u fluent-bit.service -f | grep "sensor="
 
 Each decoded packet logs:
 ```
-packet from 192.168.1.1 → device=re0 sensor=interfaces_mgmt ext=99
+packet from 192.168.1.1 → device=SV4E sensor=interfaces_mgmt ext=99
 ```
 
 Cross-reference the `ext=N` value against the dispatch table in

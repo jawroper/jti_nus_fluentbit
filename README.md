@@ -108,7 +108,7 @@ Juniper device (JunOS or Junos EVO)
 
 | Field           | Example                 | Source                                        |
 |-----------------|-------------------------|-----------------------------------------------|
-| `device`        | `re0`                   | `system_id` field from TelemetryStream        |
+| `device`        | `SV4E`                  | `system_id` field from TelemetryStream        |
 | `source`        | `100.123.152.101`       | Source IP address of the UDP packet           |
 | `sensor_name`   | `interfaces_mgmt`       | Looked up from `jti_dispatch[]` by ext_num    |
 | `jti_timestamp` | `1750812345000`         | Timestamp in milliseconds from TelemetryStream|
@@ -355,7 +355,7 @@ Enable packet-level logging by setting `Debug On` in the `[INPUT]` block:
 With debug enabled you will see:
 ```
 [jti_nus] packet from 100.123.152.101 size=312 bytes
-[jti_nus] packet from 100.123.152.101 → device=re0 sensor=interfaces_mgmt ext=99
+[jti_nus] packet from 100.123.152.101 → device=SV4E sensor=interfaces_mgmt ext=99
 [jti_nus]   → 1 records queued
 [jti_nus] flushing 12 records to Fluent Bit pipeline
 [jti_nus] stats: packets=142  records=3408  dropped=0  errors=0  queue=0
@@ -365,7 +365,7 @@ To watch decoded records in real time:
 ```bash
 tail -f /var/log/jti_nus/jti.log | jq .
 tail -f /var/log/jti_nus/jti.log | jq 'select(.sensor_name == "interfaces_mgmt")'
-tail -f /var/log/jti_nus/jti.log | jq 'select(.device == "re0")'
+tail -f /var/log/jti_nus/jti.log | jq 'select(.device == "SV4E")'
 ```
 
 Verify UDP packets are arriving before the plugin decodes them:
