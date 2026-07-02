@@ -253,7 +253,7 @@ will fail to start with:
 
 ## Override configuration at runtime
 
-Mount your own `fluent-bit.conf` to customise outputs without rebuilding
+Mount your own `fluent-bit.conf` to customize outputs without rebuilding
 the image:
 
 ```bash
