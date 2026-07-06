@@ -1,14 +1,10 @@
-Dependencies and licenses for them:
+This project links against or incorporates the following third-party components:
 
-| Go Modules Leveraged       |  License         |
-|----------------------------|------------------|
-| fluent-bit-go              | Apache 2.0       |
-| google.golang.org/protobuf | BSD-3-Clause     |
-| prometheus/client_golang   | Apache 2.0       |
-| prometheus/client_model    | Apache 2.0       |
-| prometheus/common          | Apache 2.0       |
-| prometheus/procfs          | Apache 2.0       |
-| beorn7/perks               | MIT              |
-| cespare/xxhash             | MIT              |
-| ugorji/go/codec            | MIT              |
-| golang.org/x/sys           | BSD-3-Clause     |
+| Component | License | Use |
+|-----------|---------|-----|
+| [protobuf-c](https://github.com/protobuf-c/protobuf-c) | BSD 2-Clause | Sensor message decoding |
+| [msgpack-c](https://github.com/msgpack/msgpack-c) | Boost Software License 1.0 | Fluent Bit record encoding |
+| [Fluent Bit](https://github.com/fluent/fluent-bit) | Apache 2.0 | Plugin host |
+| Juniper JTI proto files | Apache 2.0 | Sensor schema definitions |
+
+All licenses are permissive and compatible with MIT. No copyleft restrictions apply.
